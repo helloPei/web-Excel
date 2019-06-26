@@ -10,7 +10,7 @@ import com.dave.entity.ExcelTotal;
 
 /**
  * Excel数据持久层接口
- * @author davewpw
+ * @author Dave
  *
  */
 public interface ExcelDao {

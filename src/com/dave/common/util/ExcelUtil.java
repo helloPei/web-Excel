@@ -13,7 +13,11 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 import com.csvreader.CsvReader;
-
+/**
+ * Excel解析工具类
+ * @author Dave
+ *
+ */
 public class ExcelUtil {
 	/**
 	 * 读取csv格式

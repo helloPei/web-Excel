@@ -23,7 +23,7 @@ import java.util.List;
 
 /**
  * Excel业务层接口实现类
- * @author davewpw
+ * @author Dave
  *
  */
 @Service
@@ -31,22 +31,30 @@ public class ExcelServiceImpl implements ExcelService {
 
 	@Autowired
 	private ExcelDao excelDao;
-	
+	/**
+	 * 查询所有 Excel 按照名称、日期排序
+	 */
 	@Override
 	public List<Excel> selectExcel() {
 		return excelDao.selectExcel();
 	}
-	
+	/**
+	 * 根据 Excel ID 查询 Excel内容
+	 */
 	@Override
 	public List<ExcelAll> selectExcelAll(int excelId) {
 		return excelDao.selectExcelAll(excelId);
 	}
-	
+	/**
+	 * 根据 Excel ID 查询 Excel名称
+	 */
 	@Override
 	public Excel selectExcelNameById(int excelId){
 		return excelDao.selectExcelNameById(excelId);
 	}
-	
+	/**
+	 * 查询框根据Excel名称查询Excel
+	 */
 	@Override
 	public List<Excel> searchExcel(String excelDate, String excelName, int isSearchMax){
 		if(isSearchMax == 1){
@@ -347,7 +355,9 @@ public class ExcelServiceImpl implements ExcelService {
 		}
 		return wb;
 	}
-	
+	/**
+	 * 删除Excel
+	 */
 	@Override
 	public int deleteExcel(Integer... excelIds){
 		int deleteExcel = 0;

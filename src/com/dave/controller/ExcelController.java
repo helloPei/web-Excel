@@ -25,7 +25,7 @@ import com.dave.service.ExcelService;
 
 /**
  * Excel控制层
- * @author davewpw
+ * @author Dave
  *
  */
 @Controller
@@ -34,23 +34,38 @@ public class ExcelController {
 	
 	@Autowired
 	private ExcelService excelService;
-	
+	/**
+	 * 主页面显示Excel基本信息
+	 * @param model
+	 * @return
+	 */
+	@RequestMapping("doIndexUI")
+	public String showExcel(Model model) {
+		List<Excel> excels = excelService.selectExcel();
+		model.addAttribute("excel", excels);
+		return "index";
+	}
+	/**
+	 * Excel内容页面显示
+	 * @param model
+	 * @param excelId
+	 * @return
+	 */
 	@RequestMapping("doExcelAllUI")
-	public String showExcel(Model model, int excelId) {
+	public String showExcelAll(Model model, int excelId) {
 		List<ExcelAll> excels = excelService.selectExcelAll(excelId);
 		Excel excel = excelService.selectExcelNameById(excelId);
 		model.addAttribute("excelAll", excels);
 		model.addAttribute("excel", excel);
 		return "excelAll";
 	}
-	
-	@RequestMapping("doIndexUI")
-	public String showExcelAll(Model model) {
-		List<Excel> excels = excelService.selectExcel();
-		model.addAttribute("excel", excels);
-		return "index";
-	}
-	
+	/**
+	 * 查询框根据Excel名称、Excel日期等查询Excel基本信息
+	 * @param excelName
+	 * @param isSearchMax
+	 * @param model
+	 * @return
+	 */
 	@RequestMapping("doSearch")
 	public String searchExcel(String excelDate, String excelName, int isSearchMax, Model model) {
 		List<Excel> excels = excelService.searchExcel(excelDate, excelName, isSearchMax);
@@ -123,7 +138,11 @@ public class ExcelController {
 			e.printStackTrace();
 		}
 	}
-	
+	/**
+	 * 批量删除Excel
+	 * @param excelIds
+	 * @return
+	 */
 	@RequestMapping("doDeleteExcel")
 	@ResponseBody
 	public JsonResult doDeleteExcel(Integer... excelIds) {

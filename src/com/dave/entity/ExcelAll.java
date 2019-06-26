@@ -1,5 +1,9 @@
 package com.dave.entity;
-
+/**
+ * Excel内容实体类
+ * @author Dave
+ *
+ */
 public class ExcelAll {
 	/**自增主键ID*/
 	private int excelAllId;
@@ -30,18 +34,6 @@ public class ExcelAll {
 	/**--Occupancy Rate(%)*/
 	private String occupancyRate;
 	
-	public String getOccupancyHour() {
-		return occupancyHour;
-	}
-	public void setOccupancyHour(String occupancyHour) {
-		this.occupancyHour = occupancyHour;
-	}
-	public String getOccupancyRate() {
-		return occupancyRate;
-	}
-	public void setOccupancyRate(String occupancyRate) {
-		this.occupancyRate = occupancyRate;
-	}
 	public int getExcelAllId() {
 		return excelAllId;
 	}
@@ -107,5 +99,17 @@ public class ExcelAll {
 	}
 	public void setOutTotalHour(String outTotalHour) {
 		this.outTotalHour = outTotalHour;
+	}
+	public String getOccupancyHour() {
+		return occupancyHour;
+	}
+	public void setOccupancyHour(String occupancyHour) {
+		this.occupancyHour = occupancyHour;
+	}
+	public String getOccupancyRate() {
+		return occupancyRate;
+	}
+	public void setOccupancyRate(String occupancyRate) {
+		this.occupancyRate = occupancyRate;
 	}
 }

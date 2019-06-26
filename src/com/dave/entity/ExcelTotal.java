@@ -1,5 +1,9 @@
 package com.dave.entity;
-
+/**
+ * 暂时还没用到
+ * @author Dave
+ *
+ */
 public class ExcelTotal {
 	private String inCallAnswerTotal;
 	private String inAverageHoldingTPCTotal;

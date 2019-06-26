@@ -2,7 +2,7 @@ package com.dave.common.vo;
 
 import java.io.Serializable;
 /**
- * JSON结果集实体对象
+ * JSON结果集返回页面实体对象
  * @author Dave
  *
  */
