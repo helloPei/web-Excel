@@ -8,39 +8,43 @@
 </head>
 <body>
 <div style="margin-top: 25px">
+	Excel Name : 
+	<input type="text" id="excelName" name="excelName" placeholder="请输入Excel名称"/>
+	Excel Day : 
+	<input type="text" id="excelDate" name="excelDate" placeholder="查询日期格式：yyyy-mm-dd" disabled="disabled"/>
+	<button onclick="doSearch()" type="button">搜索</button>
+	<button onclick="doDelete()" type="button">删除</button>
+	<br/>
+	<input type="checkbox" name="isSearchMax" onclick="doState()">Occupancy Rate (max)
+	<br/>
+	<br/>
 	<form id="form_table" class="form-horizontal" action="doImport.do" enctype="multipart/form-data" method="post">
-        Excel Name : 
-		<input type="text" id="excelName" name="excelName" placeholder="请输入Excel名称"/>
-		<!-- <input id="search" style="margin-left: 10px" type="button" value="搜索"><br/> -->
-		<button onclick="doSearch()" type="button">搜索</button>
-		<button onclick="doDelete()" type="button">删除</button>
-        &nbsp;&nbsp;&nbsp;
         <button onclick="checkout()" type="submit" class="btn btn-primary">导入</button>
-        <input id="file_excel" class="form-input" type="file" name="filename" accept=".xls,.xlsx,.csv"></input>
+        <input id="file_excel" class="form-input" type="file" name="filename[]" multiple="multiple" accept=".xls,.xlsx,.csv"></input>
     </form>
-	<input type="checkbox" name="isSearchMax" value="1">Occupancy Rate (max)
 </div>
-<div class="table-responsive" style="margin-top: 50px">
+<div class="table-responsive" style="margin-top: 20px">
     <table class="table" border="1">
         <thead class="Table cell">
             <th><input type="checkbox" id="checkAllId">全选</th>
-            <th>Excel Name</th>
-            <th>Excel Date</th>
-            <th>Week</th>
-            <th>Import Date</th>
-            <th>Occupancy Rate(%)</th>
+            <th align="center">Excel Name</th>
+            <th align="center">Excel Type</th>
+            <th align="center">Excel Date</th>
+            <th align="center">Week</th>
+            <th align="center">Import Date</th>
+            <th align="center">Occupancy Rate(%)</th>
             <!-- <th>Delete</th> -->
         </thead>
         <tbody id="tbodyId">
             <c:forEach var="excel" items="${excel}">
                 <tr>
-                	<td><input type="checkbox" name="excelId" class="excelId" value="${excel.excelId}"></td>
-                    <%-- <td>${excel.excelId}</td> --%>
-                    <td><input type="submit" value="${excel.excelName}" onclick="getExcelAll(${excel.excelId})"></td>
-                    <td>${excel.excelDate}</td>
-                    <td>${excel.week}</td>
-                    <td>${excel.createDate}</td>
-                    <td>${excel.occupancyRate}%</td>
+                	<td><input type="checkbox" name="excelId" class="excelId" value="${excel.excelId}"><span class="numberClass"></span></td>
+                    <td align="center"><input type="submit" value="${excel.excelName}" onclick="getExcelAll(${excel.excelId})"></td>
+                    <td align="center">${excel.type}</td>
+                    <td align="center">${excel.excelDate}</td>
+                    <td align="center">${excel.week}</td>
+                    <td align="center">${excel.createDate}</td>
+                    <td align="center">${excel.occupancyRate}%</td>
                     <%-- <td><a href="doDeleteExcel.do?excelIds=${excel.excelId}" onclick="return confirm('确定删除该记录吗?')">删除</a></td> --%>
                 </tr>
             </c:forEach>
@@ -51,14 +55,31 @@
 <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
 <script language="javascript">
 $(function(){
+	doState();//页面功能使用校验
+	autoAddNumber();//自增序列化
+	$("#checkAllId").change(doChangeTBodyCheckBoxState);
+	$("#tbodyId").on("change", ".excelId", doChangeTHeadCheckBoxState);
+});
+//页面功能使用校验
+function doState(){
+	if($('input[name="isSearchMax"]:checked').prop("checked")){
+		$("#excelDate").attr("disabled","disabled");
+	}else{
+		$("#excelDate").removeAttr("disabled");
+	}
 	var state = "${requestScope.result.state}";
 	var message = "${requestScope.result.message}";
 	if(message != "" && state == 0)alert(message);
-	
-	$("#checkAllId").change(doChangeTBodyCheckBoxState);
-	$("#tbodyId").on("change", ".excelId", doChangeTHeadCheckBoxState);
-	//$(".input-group-btn").on("click", "btn-delete", doDelete);
-});
+}
+//自增序列化
+function autoAddNumber(){
+     function number(){
+          for(var i=0;i< $(".numberClass").length;i++){
+	      $(".numberClass").get(i).innerHTML = i+1;
+          }
+     }
+     number();
+}
 //单选操作
 function doChangeTHeadCheckBoxState(){
 	var flag = true;
@@ -102,8 +123,7 @@ function doDelete(){
 		});
 	}
 }
-
-//导入文件上传前校验
+//上传文件前校验
 function checkout(){
 	$("#form_table").bind("submit", function(){  
 		var file = $("#file_excel").val();
@@ -119,13 +139,10 @@ function getExcelAll(excelId){
 }
 //查询框操作
 function doSearch(){
+ 	var excelDate = $("#excelDate").val();
 	var excelName = $("#excelName").val();
-	if(excelName != ''){
-		var isSearchMax = $('input[name="isSearchMax"]:checked').val()==null ? 0:1;
-		window.location.href="doSearch.do?excelName=" + excelName + "&isSearchMax=" + isSearchMax;
-	}else{
-		window.location.href="doIndexUI.do";
-	}
+	var isSearchMax = $('input[name="isSearchMax"]:checked').prop("checked") ? 1:0;
+	window.location.href="doSearch.do?excelDate="+excelDate+"&excelName="+excelName+"&isSearchMax="+isSearchMax;
 }
 </script>
 </html>

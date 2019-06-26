@@ -9,6 +9,11 @@ import com.dave.entity.ExcelAll;
 
 import java.util.List;
 
+/**
+ * Excel业务层接口
+ * @author davewpw
+ *
+ */
 public interface ExcelService {
 	
 	List<Excel> selectExcel();
@@ -20,8 +25,8 @@ public interface ExcelService {
 	JsonResult batchImport(String fileName, MultipartFile file) throws Exception;
 	
 	Workbook batchExport(int excelId);
-	
-	List<Excel> searchExcel(String excelName, int isSearchMax);
-	
+
 	int deleteExcel(Integer... excelIds);
+	
+	List<Excel> searchExcel(String excelDate, String excelName, int isSearchMax);
 }

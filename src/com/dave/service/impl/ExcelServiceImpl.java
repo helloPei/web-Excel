@@ -21,12 +21,17 @@ import java.math.RoundingMode;
 import java.util.Date;
 import java.util.List;
 
+/**
+ * Excel业务层接口实现类
+ * @author davewpw
+ *
+ */
 @Service
 public class ExcelServiceImpl implements ExcelService {
 
 	@Autowired
 	private ExcelDao excelDao;
-
+	
 	@Override
 	public List<Excel> selectExcel() {
 		return excelDao.selectExcel();
@@ -43,52 +48,55 @@ public class ExcelServiceImpl implements ExcelService {
 	}
 	
 	@Override
+	public List<Excel> searchExcel(String excelDate, String excelName, int isSearchMax){
+		if(isSearchMax == 1){
+			return excelDao.searchExcelMax(excelName);	
+		}else{
+			return excelDao.searchExcel(excelDate, excelName);
+		}
+	}
+	/**
+	 * 读取Excel
+	 */
+	@Override
 	public JsonResult batchImport(String fileName, MultipartFile file)throws Exception {
-		//判断上传文件是否Excel文件
-		if (!fileName.matches("^.+\\.(?i)(xls)$") 
-				&& !fileName.matches("^.+\\.(?i)(xlsx)$") 
-				&& !fileName.matches("^.+\\.(?i)(csv)$"))
-			return new JsonResult("上传文件格式不正确");
-		//根据后缀名判断Excel文件版本
+		if (!fileName.matches("^.+\\.(?i)(xls)$") && !fileName.matches("^.+\\.(?i)(xlsx)$") 
+				&& !fileName.matches("^.+\\.(?i)(csv)$"))return new JsonResult("上传文件格式不正确");
 		InputStream is = file.getInputStream();
 		List<String[]> list = null;
-		if (fileName.matches("^.+\\.(?i)(csv)$")) list = ExcelUtil.readCsvByIs(is);
+		if (fileName.matches("^.+\\.(?i)(csv)$"))list = ExcelUtil.readCsvByIs(is);
 		if (fileName.matches("^.+\\.(?i)(xlsx)$") || fileName.matches("^.+\\.(?i)(xls)$"))
 			list = ExcelUtil.readXlsAndXlsxByIs(is);
-		//判断解析后结果是否为空
 		if(list == null)return new JsonResult("上传文件为空！");
-		Excel excel = new Excel();//存储对象Excel
-		//获取Excel名称
-		String[] row1 = list.get(0);//获取第一行数据
+		Excel excel = new Excel();
+		String[] row1 = list.get(0);
 		excel.setExcelName(row1[0]);
-		//获取Excel日期
-		String[] row2 = list.get(1);//获取第二行数据
+		String[] row2 = list.get(1);
 		String excelDate = row2[1];
+		if(excelDate.indexOf("/") != 2)return new JsonResult("上传文件内容样式错误！");
 		String[] splitAddress = excelDate.split("/");
 		excelDate = splitAddress[2] + "-" + splitAddress[1] + "-" + splitAddress[0];
 		excel.setExcelDate(excelDate);
-		//1.获取周期
 		excel.setWeek(row2[2]);
-		//2.创建导入日期
 		excel.setCreateDate(new Date());
-		//判断Excel样式
-		String[] row3 = list.get(2);//获取第三行数据
+		String[] row3 = list.get(2);
 		if(row3.length == 13 || row3.length >= 22){
 			excelDao.addExcel(excel);
-			//根据报表名称获取新保存的基础信息的自增excelId值
 			int excelId = excelDao.selectExcelByName(excel.getExcelName());
 			excel.setExcelId(excelId);
 			ExcelAll excelAll = new ExcelAll();
 			String excelType = null;
 			if(row3.length == 13){
 				excelType = "Outgoing Only";
+				excel.setType("Outgoing only");
 			}else{
 				excelType = "Incoming And Outgoing";
+				excel.setType("IN & OUT");
 			}
 			if(excelType.equals("Outgoing Only")){
 				//Outgoing Only Excel
 				for(int i = 3; i < 27; i++){
-					String[] row = list.get(i);//循环遍历获取第4行第28行的数据
+					String[] row = list.get(i);
 					if (row == null)continue;
 					excelAll = new ExcelAll();
 					excelAll.setExcelId(excelId);				//ExcelId
@@ -97,37 +105,29 @@ public class ExcelServiceImpl implements ExcelService {
 					excelAll.setOutAverageHoldingTPC(row[9]);	//OutAverageHoldingTPC
 					excelAll.setServiceCapacity(row[10]);		//ServiceCapacity
 					excelAll.setCapacityNeeded(row[11]);		//CapacityNeeded
-					
 					//计算 Outgoing total seconds in the hour
-					//Outgoing Call Answer
 					BigDecimal outCallAnswer = new BigDecimal(row[5]);
-					//Outgoing Average Holding Time Per Call (sec)
 					BigDecimal outAverageHoldingTPC = new BigDecimal(row[9]);
 					//Outgoing Call Answer * Outgoing Average Holding Time Per Call (sec)
 					BigDecimal outTotalHour = outCallAnswer.multiply(outAverageHoldingTPC).setScale(2, BigDecimal.ROUND_HALF_UP);
 					excelAll.setOutTotalHour(outTotalHour.toString());//OutTotalHour
-					
 					//计算 Occupancy in hours
 					//Outgoing Occupancy hour = Outgoing total hour / 3600
 					BigDecimal outOccHour = outTotalHour.divide(new BigDecimal("3600"), 4, RoundingMode.HALF_UP);
-					//用作数据库保存,保留小数点后两位
 					BigDecimal outOccHour2 = outOccHour.setScale(2, RoundingMode.HALF_UP);
 					excelAll.setOccupancyHour(outOccHour2.toString());//OccupancyHour
-					
 					//计算 Occupancy Rate
 					String serviceCapacity = row[10];
 					//Outgoing Occupancy Rate(%) = Outgoing Occupancy hour / T1 Capacity(Service Capacity) * 100
 					BigDecimal outOccRate = (outOccHour.divide(new BigDecimal(serviceCapacity), 4, RoundingMode.HALF_UP))
 							.multiply(new BigDecimal("100")).setScale(2, BigDecimal.ROUND_HALF_UP);
 					excelAll.setOccupancyRate(outOccRate.toString());//OccupancyRate
-					
-					//保存到数据库
 					excelDao.addExcelAll(excelAll);
 				}	
 			}else{
 				//Incoming And Outgoing Excel
 				for(int i = 3; i < 27; i++){
-					String[] row = list.get(i);//循环遍历获取第4行第28行的数据
+					String[] row = list.get(i);
 					if (row == null)continue;
 					excelAll = new ExcelAll();
 					excelAll.setExcelId(excelId);				//ExcelId
@@ -138,42 +138,31 @@ public class ExcelServiceImpl implements ExcelService {
 					excelAll.setOutAverageHoldingTPC(row[18]);	//OutAverageHoldingTPC
 					excelAll.setServiceCapacity(row[19]);		//ServiceCapacity
 					excelAll.setCapacityNeeded(row[20]);		//CapacityNeeded
-					
 					//计算 Incoming total seconds in the hour
-					//Incoming Call Answer
 					BigDecimal inCallAnswer = new BigDecimal(row[5]);
-					//Incoming Average Holding Time Per Call (sec)
 					BigDecimal inAverageHoldingTPC = new BigDecimal(row[9]);
 					//Incoming Call Answer * Incoming Average Holding Time Per Call (sec)
 					BigDecimal inTotalHour = inCallAnswer.multiply(inAverageHoldingTPC).setScale(2, BigDecimal.ROUND_HALF_UP);
 					excelAll.setInTotalHour(inTotalHour.toString());
-					
 					//计算 Outgoing total seconds in the hour
-					//Outgoing Call Answer
 					BigDecimal outCallAnswer = new BigDecimal(row[14]);
-					//Outgoing Average Holding Time Per Call (sec)
 					BigDecimal outAverageHoldingTPC = new BigDecimal(row[18]);
 					//Outgoing Call Answer * Outgoing Average Holding Time Per Call (sec)
 					BigDecimal outTotalHour = outCallAnswer.multiply(outAverageHoldingTPC).setScale(2, BigDecimal.ROUND_HALF_UP);
 					excelAll.setOutTotalHour(outTotalHour.toString());
-					
 					//计算 Occupancy in hours
 					//Total hour = Incoming total hour + Outgoing total hour
 					//Occupancy hour = Total hour / 3600
 					BigDecimal occHour = (inTotalHour.add(outTotalHour))
 							.divide(new BigDecimal("3600"), 4, RoundingMode.HALF_UP);
-					//用作数据库保存,保留小数点后两位
 					BigDecimal occHour2 = occHour.setScale(2, RoundingMode.HALF_UP);
 					excelAll.setOccupancyHour(occHour2.toString());
-					
 					//计算 Occupancy Rate
 					String serviceCapacity = row[19];
 					//Occupancy Rate(%) = Occupancy Hour / T1 Capacity(Service Capacity) * 100
 					BigDecimal occRate = (occHour.divide(new BigDecimal(serviceCapacity), 4, RoundingMode.HALF_UP))
 							.multiply(new BigDecimal("100")).setScale(2, BigDecimal.ROUND_HALF_UP);
 					excelAll.setOccupancyRate(occRate.toString());
-					
-					//保存到数据库
 					excelDao.addExcelAll(excelAll);
 				}
 			}
@@ -268,11 +257,13 @@ public class ExcelServiceImpl implements ExcelService {
 			excelDao.updateExcel(excel);
 			excelDao.addExcelAll(excelAll);
 		}else{
-			return new JsonResult("列数格式错误！");
+			return new JsonResult("上传文件内容样式错误！");
 		}
 		return new JsonResult("Upload successful", 1);
 	}
-	
+	/**
+	 * 导出Excel
+	 */
 	@Override
 	public Workbook batchExport(int excelId){
 		Excel excel = excelDao.selectExcelNameById(excelId);
@@ -358,20 +349,11 @@ public class ExcelServiceImpl implements ExcelService {
 	}
 	
 	@Override
-	public List<Excel> searchExcel(String excelName, int isSearchMax){
-		if(isSearchMax == 1){
-			return excelDao.searchExcelMax(excelName);	
-		}else{
-			return excelDao.searchExcel(excelName);
-		}
-	}
-	
-	@Override
 	public int deleteExcel(Integer... excelIds){
 		int deleteExcel = 0;
-		for(int excelId : excelIds) {
+		for(int excelId : excelIds){
 			int deleteAll = excelDao.deleteExcelAll(excelId);
-			if(deleteAll != 0)deleteExcel = excelDao.deleteExcel(excelId);	
+			if(deleteAll != 0)deleteExcel = excelDao.deleteExcel(excelId);
 		}
 		return deleteExcel;
 	}

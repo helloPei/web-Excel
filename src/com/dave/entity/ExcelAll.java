@@ -1,9 +1,10 @@
 package com.dave.entity;
 
 public class ExcelAll {
+	/**自增主键ID*/
 	private int excelAllId;
+	/**Excel ID*/
 	private int excelId;
-	
 	/**--Time*/
 	private String time;
 	/**--Incoming Call Answer*/
@@ -28,37 +29,6 @@ public class ExcelAll {
 	private String occupancyHour;
 	/**--Occupancy Rate(%)*/
 	private String occupancyRate;
-	
-//	/**Incoming Line Occupancy (hour)*/
-//	private String inLineOccupancy;
-//	/**Incoming Line Occupancy Rate (%)*/
-//	private String inLineOccupancyRate;
-//	/**Incoming Call Attempt*/
-//	private String inCallAttempt;
-//	/**Incoming Call Delivered*/
-//	private String inCallDelivered;
-//	/**Incoming Call Rejected*/
-//	private String inCallRejected;
-//	/**Incoming Call Delivered Rate (%)*/
-//	private String inCallDeliveredRate;
-//	/**Incoming Call Answer Rate (%)*/
-//	private String inCallAnswerRate;
-//	/**Outgoing Line Occupancy (hour)*/
-//	private String outLineOccupancy;
-//	/**Outgoing Line Occupancy Rate (%)*/
-//	private String outLineOccupancyRate;
-//	/**Outgoing Call Attempt*/
-//	private String outCallAttempt;
-//	/**Outgoing Call Delivered*/
-//	private String outCallDelivered;
-//	/**Outgoing Call Rejected*/
-//	private String outCallRejected;
-//	/**Outgoing Call Delivered Rate (%)*/
-//	private String outCallDeliveredRate;
-//	/**Outgoing Call Answer Rate (%)*/
-//	private String outCallAnswerRate;
-//	/**Capacity Margin*/
-//	private String capacityMargin;
 	
 	public String getOccupancyHour() {
 		return occupancyHour;

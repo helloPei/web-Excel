@@ -9,7 +9,7 @@
 <body>
 <h3>${excel.excelName}</h3>
 <h4>${excel.excelDate}-${excel.week}</h4>
-<div class="table-responsive" style="margin-top: 50px">
+<div class="table-responsive" style="margin-top: 20px">
     <table class="table" border="1">
         <thead class="Table cell">
             <td>Time</td>

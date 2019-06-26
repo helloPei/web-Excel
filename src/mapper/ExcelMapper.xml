@@ -3,6 +3,7 @@
 <mapper namespace="com.dave.dao.ExcelDao">
 	<resultMap type="com.dave.entity.Excel" id="ExcelResult">
 		<id property="excelId" column="EXCEL_ID"/>
+		<result property="type" column="TYPE"/>
 		<result property="excelName" column="EXCEL_NAME"/>
 		<result property="excelDate" column="EXCEL_DATE"/>
 		<result property="week" column="WEEK"/>
@@ -24,14 +25,9 @@
 		<result property="occupancyHour" column="OCCUPANCY_HOUR"/>
 		<result property="occupancyRate" column="OCCUPANCY_RATE"/>		
 	</resultMap>
-	<!-- 测试数据库连接 -->
-	<select id="selectCount" resultType="int">
-		SELECT count(*) FROM EXCEL_REPORT
-	</select>
-	
 	<!-- 查询所有 Excel 按照名称、日期排序 -->
 	<select id="selectExcel" resultMap="ExcelResult">
-		SELECT * FROM EXCEL_REPORT ORDER BY DATE_FORMAT(EXCEL_DATE, 'yyyy-MM-dd') DESC
+		SELECT * FROM EXCEL_REPORT ORDER BY EXCEL_NAME DESC, DATE_FORMAT(EXCEL_DATE, 'yyyy-MM-dd') DESC
 	</select>
 	<!-- 根据 Excel ID 查询所有 Excel 内容 -->
 	<select id="selectExcelAll" resultMap="ExcelAllResult">
@@ -57,7 +53,9 @@
 	</insert>
 	<!-- 更改 Excel, 添加 Occupancy Rate 的内容 -->
 	<update id="updateExcel" parameterType="com.dave.entity.Excel">
-		UPDATE EXCEL_REPORT SET OCCUPANCY_RATE = #{occupancyRate, jdbcType=VARCHAR}
+		UPDATE EXCEL_REPORT SET 
+		OCCUPANCY_RATE = #{occupancyRate, jdbcType=VARCHAR}
+		, TYPE = #{type, jdbcType=VARCHAR} 
 		WHERE EXCEL_ID = #{excelId}
 	</update>
 	<!-- 根据 Excel 名称查询, 最新的自增 Excel ID -->
@@ -95,20 +93,35 @@
 	<delete id="deleteExcel">
 		DELETE FROM EXCEL_REPORT WHERE EXCEL_ID = #{excelId}
 	</delete>
-	<!-- 根据 Excel ID 查询 Excel 内容, 获取需要的Total -->
+	<!-- 根据 Excel ID 查询 Excel内容, 获取需要的Total -->
 	<select id="selectExcelAllTotal" resultType="com.dave.entity.ExcelTotal">
 		select 
-		CAST(sum(IN_CALL_ANSWER) AS DECIMAL(9,2) as inCallAnswerTotal
-		, CAST(sum(IN_AVERAGE_HOLDING_TPC) AS DECIMAL(9,2) as inAverageHoldingTPCTotal
-		, CAST(sum(OUT_CALL_ANSWER) AS DECIMAL(9,2) as outCallAnswerTotal
-		, CAST(sum(OUT_AVERAGE_HOLDING_TPC) AS DECIMAL(9,2) as outAverageHoldingTPCTotal
-		, CAST(sum(SERVICE_CAPACITY) AS DECIMAL(9,2) as serviceCapacityTotal
-		, CAST(sum(CAPACITY_NEEDED) AS DECIMAL(9,2)) as capacityNeededTotal
+		sum(IN_CALL_ANSWER) as inCallAnswerTotal
+		, sum(IN_AVERAGE_HOLDING_TPC) as inAverageHoldingTPCTotal
+		, sum(OUT_CALL_ANSWER) as outCallAnswerTotal
+		, sum(OUT_AVERAGE_HOLDING_TPC) as outAverageHoldingTPCTotal
+		, sum(SERVICE_CAPACITY) as serviceCapacityTotal
+		, sum(CAPACITY_NEEDED) as capacityNeededTotal
 		from EXCEL_REPORT_ALL where EXCEL_ID = #{excelId}
 	</select>
 	<!-- 根据名称查询所有 Excel -->
-	<select id="searchExcel" parameterType="String" resultMap="ExcelResult">
-		SELECT * FROM EXCEL_REPORT WHERE EXCEL_NAME LIKE concat("%", #{excelName}, "%")
+	<select id="searchExcel" resultMap="ExcelResult">
+		SELECT * FROM EXCEL_REPORT 
+		<if test="excelName != null and '' != excelName || excelDate != null and '' != excelDate">
+			WHERE 
+		</if>
+		<if test="excelName != null and '' != excelName">
+			EXCEL_NAME LIKE concat("%", #{excelName}, "%")
+		</if>
+		<if test="excelName != null and '' != excelName and excelDate != null and '' != excelDate">
+			AND
+		</if>
+		<if test="excelDate != null and '' != excelDate">
+			EXCEL_DATE = #{excelDate}
+		</if>
+		<if test="(excelName == null || '' == excelName) and (excelDate == null || '' == excelDate)">
+			ORDER BY EXCEL_NAME DESC, DATE_FORMAT(EXCEL_DATE, 'yyyy-MM-dd') DESC
+		</if>
 	</select>
 	<!-- 根据名称查询 Excel Occupancy Rate 的最大数 -->
 	<select id="searchExcelMax" parameterType="String" resultMap="ExcelResult">

@@ -15,7 +15,6 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import com.csvreader.CsvReader;
 
 public class ExcelUtil {
-
 	/**
 	 * 读取csv格式
 	 * 
@@ -36,7 +35,6 @@ public class ExcelUtil {
 		}
 		return csvList;
 	}
-
 	/**
 	 * 读取xls和xlsx格式
 	 * 
@@ -98,5 +96,4 @@ public class ExcelUtil {
 		}
 		return xlsList;
 	}
-
 }

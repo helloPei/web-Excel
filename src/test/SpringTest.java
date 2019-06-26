@@ -14,15 +14,6 @@ public class SpringTest extends SpringTestBase {
 	@Autowired
 	private ExcelDao excelDao;
 	
-	/**
-	 * 测试数据库连接
-	 */
-	@Test
-	public void selectTest() {
-		int count = excelDao.selectCount();
-		System.out.println(count);
-	}
-	
 	@Test
 	public void insertTest() {
 		ExcelAll excelAll = new ExcelAll();
