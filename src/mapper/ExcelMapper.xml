@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.dave.dao.ExcelDao">
+	<!-- 对应数据表EXCEL_REPORT的Map属性 -->
 	<resultMap type="com.dave.entity.Excel" id="ExcelResult">
 		<id property="excelId" column="EXCEL_ID"/>
 		<result property="type" column="TYPE"/>
@@ -10,6 +11,7 @@
 		<result property="createDate" column="CREATE_DATE"/>
 		<result property="occupancyRate" column="OCCUPANCY_RATE"/>
 	</resultMap>
+	<!-- 对应数据表EXCEL_REPORT_ALL的Map属性 -->
 	<resultMap type="com.dave.entity.ExcelAll" id="ExcelAllResult">
 		<id property="excelAllId" column="EXCELALL_ID"/>
 		<result property="excelId" column="EXCEL_ID"/>
