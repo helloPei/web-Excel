@@ -43,7 +43,7 @@
 		WHERE EXCEL_ID = #{excelId}) ORDER BY TIME ASC
 	</select>
 	<!-- 根据 Excel ID 查询 Excel -->
-	<select id="selectExcelNameById" resultMap="ExcelResult">
+	<select id="selectExcelById" resultMap="ExcelResult">
 		SELECT * FROM EXCEL_REPORT WHERE EXCEL_ID = #{excelId}
 	</select>
 	<!-- 添加 Excel -->
@@ -119,7 +119,7 @@
 			AND
 		</if>
 		<if test="excelDate != null and '' != excelDate">
-			EXCEL_DATE = #{excelDate}
+			EXCEL_DATE LIKE concat("%", #{excelDate}, "%")
 		</if>
 		<if test="(excelName == null || '' == excelName) and (excelDate == null || '' == excelDate)">
 			ORDER BY EXCEL_NAME DESC, DATE_FORMAT(EXCEL_DATE, 'yyyy-MM-dd') DESC

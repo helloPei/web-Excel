@@ -10,6 +10,7 @@ import com.dave.entity.ExcelTotal;
 
 /**
  * Excel数据持久层接口
+ * 
  * @author Dave
  *
  */
@@ -19,7 +20,7 @@ public interface ExcelDao {
 	/**根据 ExcelID 查询所有 Excel内容*/
 	List<ExcelAll> selectExcelAll(int excelId);
 	/**根据 ExcelID 查询 Excel*/
-	Excel selectExcelNameById(int excelId);
+	Excel selectExcelById(int excelId);
 	/**添加 Excel*/
 	int addExcel(Excel excel);
 	/**更改 Excel, 添加 Occupancy Rate 的内容*/

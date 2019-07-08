@@ -25,6 +25,7 @@ import com.dave.service.ExcelService;
 
 /**
  * Excel控制层
+ * 
  * @author Dave
  *
  */
@@ -36,6 +37,7 @@ public class ExcelController {
 	private ExcelService excelService;
 	/**
 	 * 主页面显示Excel基本信息
+	 * 
 	 * @param model
 	 * @return
 	 */
@@ -47,6 +49,7 @@ public class ExcelController {
 	}
 	/**
 	 * Excel内容页面显示
+	 * 
 	 * @param model
 	 * @param excelId
 	 * @return
@@ -54,13 +57,14 @@ public class ExcelController {
 	@RequestMapping("doExcelAllUI")
 	public String showExcelAll(Model model, int excelId) {
 		List<ExcelAll> excels = excelService.selectExcelAll(excelId);
-		Excel excel = excelService.selectExcelNameById(excelId);
+		Excel excel = excelService.selectExcelById(excelId);
 		model.addAttribute("excelAll", excels);
 		model.addAttribute("excel", excel);
 		return "excelAll";
 	}
 	/**
 	 * 查询框根据Excel名称、Excel日期等查询Excel基本信息
+	 * 
 	 * @param excelName
 	 * @param isSearchMax
 	 * @param model
@@ -74,6 +78,7 @@ public class ExcelController {
 	}
 	/**
 	 * 导入Excel
+	 * 
 	 * @param request
 	 * @param model
 	 * @return
@@ -119,6 +124,7 @@ public class ExcelController {
 	}
 	/**
 	 * 导出Excel
+	 * 
 	 * @param response
 	 * @param excelId
 	 */
@@ -127,7 +133,7 @@ public class ExcelController {
 	public void export(HttpServletResponse response, int excelId) {
 		try {
 			Workbook wb = excelService.batchExport(excelId);
-			Excel excel = excelService.selectExcelNameById(excelId);
+			Excel excel = excelService.selectExcelById(excelId);
 			response.setContentType("application/vnd.ms-excel;charset=utf-8");
 			OutputStream os = response.getOutputStream();
 			response.setHeader("Content-disposition", "attachment;filename="+excel.getExcelName()+" - "+excel.getExcelDate()+".xls");// 默认Excel名称
@@ -140,6 +146,7 @@ public class ExcelController {
 	}
 	/**
 	 * 批量删除Excel
+	 * 
 	 * @param excelIds
 	 * @return
 	 */

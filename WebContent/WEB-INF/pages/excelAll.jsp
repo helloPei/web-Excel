@@ -12,19 +12,19 @@
 <div class="table-responsive" style="margin-top: 20px">
     <table class="table" border="1">
         <thead class="Table cell">
-            <td>Time</td>
-            <td>Incoming Call Answer</td>
-            <td>Incoming Average Holding Time Per Call (sec)</td>
-            <td>Incoming Total Seconds In The Hour (sec)</td>
-            <td>Outgoing Call Answer</td>
-            <td>Outgoing Average Holding Time Per Call (sec)</td>
-            <td>Outgoing Total Seconds In The Hour (sec)</td>
-            <td>Service Capacity</td>
-            <td>Capacity Needed</td>
-            <td>Occupancy Hour(hour)</td>
-            <td>Occupancy Rate(%)</td>
+            <th>Time</th>
+            <th>Incoming Call Answer</th>
+            <th>Incoming Average Holding Time Per Call (sec)</th>
+            <th>Incoming Total Seconds In The Hour (sec)</th>
+            <th>Outgoing Call Answer</td>
+            <th>Outgoing Average Holding Time Per Call (sec)</th>
+            <th>Outgoing Total Seconds In The Hour (sec)</th>
+            <th>Service Capacity</th>
+            <th>Capacity Needed</th>
+            <th>Occupancy Hour(hour)</th>
+            <th>Occupancy Rate(%)</th>
         </thead>
-        <tbody>
+        <tbody id="tbodyId">
             <c:forEach var="excel" items="${excelAll}">
                 <tr class="success">
                     <td>${excel.time}</td>
@@ -48,6 +48,18 @@
 </body>
 <script type="text/javascript" src="http://code.jquery.com/jquery-2.1.1.min.js"></script>
 <script type="text/javascript">
+$(function(){
+	var occupancyRate = ${excel.occupancyRate};
+	var trList = $("#tbodyId").children("tr")
+	  for (var i = 0; i < trList.length; i++) {
+	    var tdArr = trList.eq(i).find("td");
+	    var tdVal = tdArr.eq(10).text();
+		if(occupancyRate+"%" == tdVal || occupancyRate+"0%" == tdVal 
+				|| occupancyRate+".00%" == tdVal) {
+			tdArr.css('background-color','#FFAE38');
+		}
+	  }
+});
 function doExport(){
 	var excelId = ${excel.excelId};
     window.location.href="doExport.do?excelId="+excelId;

@@ -5,6 +5,7 @@ import com.dave.common.vo.JsonResult;
 import com.dave.dao.ExcelDao;
 import com.dave.entity.Excel;
 import com.dave.entity.ExcelAll;
+import com.dave.entity.ExcelTotal;
 import com.dave.service.ExcelService;
 
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
@@ -13,6 +14,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+//import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
@@ -23,6 +25,7 @@ import java.util.List;
 
 /**
  * Excel业务层接口实现类
+ * 
  * @author Dave
  *
  */
@@ -31,57 +34,53 @@ public class ExcelServiceImpl implements ExcelService {
 
 	@Autowired
 	private ExcelDao excelDao;
-	/**
-	 * 查询所有 Excel 按照名称、日期排序
-	 */
+	
 	@Override
 	public List<Excel> selectExcel() {
 		return excelDao.selectExcel();
 	}
-	/**
-	 * 根据 Excel ID 查询 Excel内容
-	 */
+	
 	@Override
 	public List<ExcelAll> selectExcelAll(int excelId) {
 		return excelDao.selectExcelAll(excelId);
 	}
-	/**
-	 * 根据 Excel ID 查询 Excel名称
-	 */
+	
 	@Override
-	public Excel selectExcelNameById(int excelId){
-		return excelDao.selectExcelNameById(excelId);
+	public Excel selectExcelById(int excelId){
+		return excelDao.selectExcelById(excelId);
 	}
-	/**
-	 * 查询框根据Excel名称查询Excel
-	 */
+	
 	@Override
 	public List<Excel> searchExcel(String excelDate, String excelName, int isSearchMax){
 		if(isSearchMax == 1){
-			return excelDao.searchExcelMax(excelName);	
+			return excelDao.searchExcelMax(excelName);
 		}else{
 			return excelDao.searchExcel(excelDate, excelName);
 		}
 	}
-	/**
-	 * 读取Excel
-	 */
+	
 	@Override
 	public JsonResult batchImport(String fileName, MultipartFile file)throws Exception {
 		if (!fileName.matches("^.+\\.(?i)(xls)$") && !fileName.matches("^.+\\.(?i)(xlsx)$") 
-				&& !fileName.matches("^.+\\.(?i)(csv)$"))return new JsonResult("上传文件格式不正确");
+				&& !fileName.matches("^.+\\.(?i)(csv)$")) {
+			return new JsonResult("上传文件格式不正确");
+		}
 		InputStream is = file.getInputStream();
 		List<String[]> list = null;
 		if (fileName.matches("^.+\\.(?i)(csv)$"))list = ExcelUtil.readCsvByIs(is);
 		if (fileName.matches("^.+\\.(?i)(xlsx)$") || fileName.matches("^.+\\.(?i)(xls)$"))
 			list = ExcelUtil.readXlsAndXlsxByIs(is);
-		if(list == null)return new JsonResult("上传文件为空！");
+		if(list == null) {
+			return new JsonResult("上传文件为空！");
+		}
 		Excel excel = new Excel();
 		String[] row1 = list.get(0);
 		excel.setExcelName(row1[0]);
 		String[] row2 = list.get(1);
 		String excelDate = row2[1];
-		if(excelDate.indexOf("/") != 2)return new JsonResult("上传文件内容样式错误！");
+		if(excelDate.indexOf("/") != 2) {
+			return new JsonResult("上传文件格式错误！");
+		}
 		String[] splitAddress = excelDate.split("/");
 		excelDate = splitAddress[2] + "-" + splitAddress[1] + "-" + splitAddress[0];
 		excel.setExcelDate(excelDate);
@@ -92,7 +91,6 @@ public class ExcelServiceImpl implements ExcelService {
 			excelDao.addExcel(excel);
 			int excelId = excelDao.selectExcelByName(excel.getExcelName());
 			excel.setExcelId(excelId);
-			ExcelAll excelAll = new ExcelAll();
 			String excelType = null;
 			if(row3.length == 13){
 				excelType = "Outgoing Only";
@@ -106,7 +104,7 @@ public class ExcelServiceImpl implements ExcelService {
 				for(int i = 3; i < 27; i++){
 					String[] row = list.get(i);
 					if (row == null)continue;
-					excelAll = new ExcelAll();
+					ExcelAll excelAll = new ExcelAll();
 					excelAll.setExcelId(excelId);				//ExcelId
 					excelAll.setTime(row[0]);					//Time
 					excelAll.setOutCallAnswer(row[5]);			//OutCallAnswer
@@ -137,7 +135,7 @@ public class ExcelServiceImpl implements ExcelService {
 				for(int i = 3; i < 27; i++){
 					String[] row = list.get(i);
 					if (row == null)continue;
-					excelAll = new ExcelAll();
+					ExcelAll excelAll = new ExcelAll();
 					excelAll.setExcelId(excelId);				//ExcelId
 					excelAll.setTime(row[0]);					//Time	
 					excelAll.setInCallAnswer(row[5]);			//InCallAnswer
@@ -174,71 +172,61 @@ public class ExcelServiceImpl implements ExcelService {
 					excelDao.addExcelAll(excelAll);
 				}
 			}
-			//V0.3
-			//单独计算Total
-			ExcelAll excelAllMax = excelDao.selectExcelAllMax(excelId);
-			excelAll.setExcelId(excelId);
-			excelAll.setTime("MAX");
-			if(excelType.equals("Incoming And Outgoing")){//Incoming And Outgoing
-				excelAll.setInCallAnswer(excelAllMax.getInCallAnswer());
-				excelAll.setInAverageHoldingTPC(excelAllMax.getInAverageHoldingTPC());
-				excelAll.setInTotalHour(excelAllMax.getInTotalHour());			
-			}
-			excelAll.setOutCallAnswer(excelAllMax.getOutCallAnswer());
-			excelAll.setOutAverageHoldingTPC(excelAllMax.getOutAverageHoldingTPC());
-			excelAll.setOutTotalHour(excelAllMax.getOutTotalHour());
-			excelAll.setServiceCapacity(excelAllMax.getServiceCapacity());
-			excelAll.setCapacityNeeded(excelAllMax.getCapacityNeeded());
-			excelAll.setOccupancyHour(excelAllMax.getOccupancyHour());
-			excelAll.setOccupancyRate(excelAllMax.getOccupancyRate());
-			excel.setOccupancyRate(excelAllMax.getOccupancyRate());
 			
 			//V0.2
-//			//单独计算Total
-//			ExcelTotal totals = excelDao.selectExcelAllTotal(excelId);
-//			String[] row28 = list.get(27);
-//			if (row28 == null)return new JsonResult("Total行不为空！");
-//			excelAll.setExcelId(excelId);
-//			excelAll.setTime(row28[0]);
-//			excelAll.setOutCallAnswer(totals.getOutCallAnswerTotal());
-//			excelAll.setOutAverageHoldingTPC(totals.getOutAverageHoldingTPCTotal());
-//			excelAll.setServiceCapacity(totals.getServiceCapacityTotal());
-//			excelAll.setCapacityNeeded(totals.getCapacityNeededTotal());
-//			//计算 Outgoing total seconds in the hour
-//			BigDecimal outCallAnswer = new BigDecimal(totals.getOutCallAnswerTotal());
-//			BigDecimal outAverageHoldingTPC = new BigDecimal(totals.getOutAverageHoldingTPCTotal());
-//			//Outgoing Call Answer * Outgoing Average Holding Time Per Call (sec)
-//			BigDecimal outTotalHour = outCallAnswer.multiply(outAverageHoldingTPC).setScale(2, BigDecimal.ROUND_HALF_UP);
-//			excelAll.setOutTotalHour(outTotalHour.toString());
-//			BigDecimal occHour = null;
-//			if(excelType.equals("Incoming And Outgoing")){//Incoming And Outgoing
-//				excelAll.setInCallAnswer(totals.getInCallAnswerTotal());
-//				excelAll.setInAverageHoldingTPC(totals.getInAverageHoldingTPCTotal());
-//				//计算 Incoming total seconds in the hour
-//				BigDecimal inCallAnswer = new BigDecimal(totals.getInCallAnswerTotal());
-//				BigDecimal inAverageHoldingTPC = new BigDecimal(totals.getInAverageHoldingTPCTotal());
-//				//Incoming Call Answer * Incoming Average Holding Time Per Call (sec)
-//				BigDecimal inTotalHour = inCallAnswer.multiply(inAverageHoldingTPC).setScale(2, BigDecimal.ROUND_HALF_UP);
-//				excelAll.setInTotalHour(inTotalHour.toString());			
-//				//计算 Occupancy in hours
-//				//Total hour = Incoming total hour + Outgoing total hour
-//				//Occupancy hour = Total hour / 3600
-//				occHour = (inTotalHour.add(outTotalHour))
-//						.divide(new BigDecimal("3600"), 4, RoundingMode.HALF_UP);
-//				BigDecimal occHour2 = occHour.setScale(2, RoundingMode.HALF_UP);
-//				excelAll.setOccupancyHour(occHour2.toString());
-//			}else{
-//				occHour = outTotalHour.divide(new BigDecimal("3600"), 4, RoundingMode.HALF_UP);
-//				BigDecimal occHour2 = occHour.setScale(2, RoundingMode.HALF_UP);
-//				excelAll.setOccupancyHour(occHour2.toString());
-//			}
-//			//计算 Occupancy Rate
-//			//Occupancy Rate(%) = Occupancy Hour / T1 Capacity(Service Capacity) * 100
-//			BigDecimal occRate = (occHour
-//					.divide(new BigDecimal(totals.getServiceCapacityTotal()), 4, RoundingMode.HALF_UP))
-//					.multiply(new BigDecimal("100")).setScale(2, BigDecimal.ROUND_HALF_UP);
-//			excelAll.setOccupancyRate(occRate.toString());
-//			excel.setOccupancyRate(occRate.toString());
+			//单独计算Total
+			ExcelAll excelTotal = new ExcelAll();
+			ExcelTotal totals = excelDao.selectExcelAllTotal(excelId);
+			String[] row28 = list.get(27);
+			if (row28 == null) {
+				return new JsonResult("Total行不为空！");
+			}
+			excelTotal.setExcelId(excelId);
+			excelTotal.setTime(row28[0]);
+			excelTotal.setOutCallAnswer(totals.getOutCallAnswerTotal());
+			excelTotal.setOutAverageHoldingTPC(totals.getOutAverageHoldingTPCTotal());
+			excelTotal.setServiceCapacity(totals.getServiceCapacityTotal());
+			excelTotal.setCapacityNeeded(totals.getCapacityNeededTotal());
+			//计算 Outgoing total seconds in the hour
+			BigDecimal outCallAnswer = new BigDecimal(totals.getOutCallAnswerTotal());
+			BigDecimal outAverageHoldingTPC = new BigDecimal(totals.getOutAverageHoldingTPCTotal());
+			//Outgoing Call Answer * Outgoing Average Holding Time Per Call (sec)
+			BigDecimal outTotalHour = outCallAnswer.multiply(outAverageHoldingTPC).setScale(2, BigDecimal.ROUND_HALF_UP);
+			excelTotal.setOutTotalHour(outTotalHour.toString());
+			BigDecimal occHour = null;
+			if(excelType.equals("Incoming And Outgoing")){//Incoming And Outgoing
+				excelTotal.setInCallAnswer(totals.getInCallAnswerTotal());
+				excelTotal.setInAverageHoldingTPC(totals.getInAverageHoldingTPCTotal());
+				//计算 Incoming total seconds in the hour
+				BigDecimal inCallAnswer = new BigDecimal(totals.getInCallAnswerTotal());
+				BigDecimal inAverageHoldingTPC = new BigDecimal(totals.getInAverageHoldingTPCTotal());
+				//Incoming Call Answer * Incoming Average Holding Time Per Call (sec)
+				BigDecimal inTotalHour = inCallAnswer.multiply(inAverageHoldingTPC).setScale(2, BigDecimal.ROUND_HALF_UP);
+				excelTotal.setInTotalHour(inTotalHour.toString());			
+				//计算 Occupancy in hours
+				//Total hour = Incoming total hour + Outgoing total hour
+				//Occupancy hour = Total hour / 3600
+				occHour = (inTotalHour.add(outTotalHour))
+						.divide(new BigDecimal("3600"), 4, RoundingMode.HALF_UP);
+				BigDecimal occHour2 = occHour.setScale(2, RoundingMode.HALF_UP);
+				excelTotal.setOccupancyHour(occHour2.toString());
+			}else{
+				occHour = outTotalHour.divide(new BigDecimal("3600"), 4, RoundingMode.HALF_UP);
+				BigDecimal occHour2 = occHour.setScale(2, RoundingMode.HALF_UP);
+				excelTotal.setOccupancyHour(occHour2.toString());
+			}
+			//计算 Occupancy Rate
+			//Occupancy Rate(%) = Occupancy Hour / T1 Capacity(Service Capacity) * 100
+			BigDecimal occRate = (occHour
+					.divide(new BigDecimal(totals.getServiceCapacityTotal()), 4, RoundingMode.HALF_UP))
+					.multiply(new BigDecimal("100")).setScale(2, BigDecimal.ROUND_HALF_UP);
+			excelTotal.setOccupancyRate(occRate.toString());
+			
+			//单独计算Max
+			ExcelAll excelAllMax = excelDao.selectExcelAllMax(excelId);
+			excel.setOccupancyRate(excelAllMax.getOccupancyRate());
+			excelDao.updateExcel(excel);
+			excelDao.addExcelAll(excelTotal);
 			
 			//v0.1
 //				//单独计算Total保存到数据库
@@ -262,19 +250,15 @@ public class ExcelServiceImpl implements ExcelService {
 //				excelAll.setCapacityNeeded(totals.getCapacityNeededTotal());		
 //				excelAll.setOccupancyHour(totals.getOccupancyHourTotal());
 //				excelAll.setOccupancyRate(totals.getOccupancyRateTotal());
-			excelDao.updateExcel(excel);
-			excelDao.addExcelAll(excelAll);
 		}else{
-			return new JsonResult("上传文件内容样式错误！");
+			return new JsonResult("上传文件格式错误！");
 		}
 		return new JsonResult("Upload successful", 1);
 	}
-	/**
-	 * 导出Excel
-	 */
+	
 	@Override
 	public Workbook batchExport(int excelId){
-		Excel excel = excelDao.selectExcelNameById(excelId);
+		Excel excel = excelDao.selectExcelById(excelId);
 		HSSFWorkbook wb = new HSSFWorkbook();
 		Sheet sheet = wb.createSheet(excel.getExcelDate());
 		Row row = null;
@@ -355,9 +339,7 @@ public class ExcelServiceImpl implements ExcelService {
 		}
 		return wb;
 	}
-	/**
-	 * 删除Excel
-	 */
+	
 	@Override
 	public int deleteExcel(Integer... excelIds){
 		int deleteExcel = 0;

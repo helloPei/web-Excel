@@ -5,6 +5,7 @@ import java.util.Date;
 import com.fasterxml.jackson.annotation.JsonFormat;
 /**
  * Excel基本信息实体类
+ * 
  * @author Dave
  *
  */

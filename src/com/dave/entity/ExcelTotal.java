@@ -1,6 +1,7 @@
 package com.dave.entity;
 /**
- * 暂时还没用到
+ * Excel总数
+ * 
  * @author Dave
  *
  */
